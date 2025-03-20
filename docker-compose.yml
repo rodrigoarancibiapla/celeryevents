@@ -1,0 +1,141 @@
+version: '3.8'
+
+services:
+  
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+    networks:
+      - celery_network
+
+  spanner_emulator:
+    image: gcr.io/cloud-spanner-emulator/emulator:latest
+    container_name: spanner_emulator
+    ports:
+      - "9010:9010"  # Puerto gRPC
+      - "9020:9020"  # Puerto REST
+    networks:
+      - celery_network
+
+  spanner_init:
+    build:
+      context: ./initSpanner
+      dockerfile: Dockerfile.spanner  # Usa un Dockerfile personalizado
+    container_name: spanner_init
+    depends_on:
+      - spanner_emulator
+    environment:
+      - SPANNER_EMULATOR_HOST=spanner_emulator:9010
+    networks:
+      - celery_network
+  
+
+
+  celery_worker:
+    image: python:3.12-slim  # o cualquier imagen que tengas para tus tareas Celery
+    container_name: celery_worker
+    depends_on:
+      - redis
+      - spanner_init
+      - localstack
+    environment:
+      - REDIS_HOST=redis
+      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el name del contenedor
+      - URL_API_CUSTOMERS=http://customers_api:8001
+      - URL_API_TRANSACTIONS=http://transactions_api:8002
+      - LOCALSTACK_HOST=localstack
+    command: celery -A worker.generation worker --loglevel=info
+    volumes:
+      - .:/app
+    networks:
+      - celery_network
+    build:
+      context: ./worker
+      dockerfile: Dockerfile.celery
+
+  
+  localstack:
+    container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
+    image: localstack/localstack
+    ports:
+      - "127.0.0.1:4566:4566"  # Puerto principal de LocalStack
+    environment:
+      - DEBUG=1
+      - SERVICES=s3  # Habilitar el servicio S3
+    volumes:
+      - ./init-scripts:/etc/localstack/init/ready.d  # Montar la carpeta con scripts de inicialización
+      - ${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack  # Volumen para persistencia de datos
+      - /var/run/docker.sock:/var/run/docker.sock  # Montar el socket de Docker
+    networks:
+      - celery_network
+
+  runflow:
+    build:
+      context: ./runflow  # Busca el Dockerfile en el directorio actual
+      dockerfile: Dockerfile.flow  # Nombre del Dockerfile
+    container_name: runflow
+    depends_on:
+      customers_api:
+        condition: service_healthy
+      transactions_api:
+        condition: service_healthy
+    networks:
+      - celery_network  # Asegúrate de que esta red exista o créala
+    environment:
+      - REDIS_HOST=redis
+    restart: on-failure
+    entrypoint: /wait-for-services.sh
+  customers_api:
+    build:
+      context: ./customersAPI
+      dockerfile: Dockerfile
+    container_name: customers_api
+    ports:
+      - "8001:8001"
+    environment:
+      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el name del contenedor
+    networks:
+      - celery_network
+    depends_on:
+      - spanner_init 
+    volumes:
+      - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 60s
+      retries: 1
+      start_period: 20s  # Tiempo de gracia para que la API inicie
+
+  transactions_api:
+    build:
+      context: ./transactionsAPI
+      dockerfile: Dockerfile
+    container_name: transactions_api
+    ports:
+      - "8002:8002"
+    environment:
+      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el name del contenedor
+    networks:
+      - celery_network
+    depends_on:
+      - spanner_init 
+    volumes:
+      - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 60s
+      retries: 1
+      start_period: 20s  # Tiempo de gracia para que la API inicie
+
+
+networks:
+  celery_network:
+    driver: bridge
