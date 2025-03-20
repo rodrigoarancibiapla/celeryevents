@@ -1,0 +1,109 @@
+version: '3.8'
+
+services:
+  
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 5
+    networks:
+      - celery_network
+
+  spanner_emulator:
+    image: gcr.io/cloud-spanner-emulator/emulator:latest
+    container_name: spanner_emulator
+    ports:
+      - "9010:9010"  # Puerto gRPC
+      - "9020:9020"  # Puerto REST
+    networks:
+      - celery_network
+
+  spanner_init:
+    build:
+      context: .
+      dockerfile: Dockerfile.spanner  # Usa un Dockerfile personalizado
+    container_name: spanner_init
+    depends_on:
+      - spanner_emulator
+    environment:
+      - SPANNER_EMULATOR_HOST=spanner_emulator:9010
+    networks:
+      - celery_network
+    volumes:
+      - .:/app  # Monta el directorio actual para acceder al script
+
+
+
+
+  celery_worker:
+    image: python:3.12-slim  # o cualquier imagen que tengas para tus tareas Celery
+    container_name: celery_worker
+    depends_on:
+      - redis
+      - customers_api
+      - transactions_api
+      - spanner_emulator  # Asegúrate de que Celery espere al emulador
+    environment:
+      - REDIS_HOST=redis
+      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el nombre del contenedor
+      - URL_API_CUSTOMERS=http://customers_api:8001
+      - URL_API_TRANSACTIONS=http://transactions_api:8002
+    command: celery -A generation worker --loglevel=info
+    volumes:
+      - .:/app
+    networks:
+      - celery_network
+    build:
+      context: .
+      dockerfile: Dockerfile 
+
+  test_container:
+    build:
+      context: .
+      dockerfile: Dockerfile.tester  # Usa un Dockerfile personalizado
+    command: /bin/sh
+    stdin_open: true  # Permite que el contenedor acepte la entrada del terminal
+    tty: true  # Mantiene el contenedor activo
+    networks:
+      - celery_network
+  customers_api:
+    build:
+      context: ./customersAPI
+      dockerfile: Dockerfile
+    container_name: customers_api
+    ports:
+      - "8001:8001"
+    environment:
+      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el nombre del contenedor
+    networks:
+      - celery_network
+    depends_on:
+      - spanner_init 
+    volumes:
+      - .:/app
+
+  transactions_api:
+    build:
+      context: ./transactionsAPI
+      dockerfile: Dockerfile
+    container_name: transactions_api
+    ports:
+      - "8002:8002"
+    environment:
+      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el nombre del contenedor
+    networks:
+      - celery_network
+    depends_on:
+      - spanner_init 
+    volumes:
+      - .:/app
+
+
+networks:
+  celery_network:
+    driver: bridge
