@@ -13,7 +13,7 @@ def ejecutar_flujo():
     # Pasando los argumentos entre las tareas utilizando apply_async y link
     task1 = app.send_task('generation.generar_clientes')  # Primera tarea
     task2 = app.send_task('generation.generar_transacciones', args=[task1.get()])  # Segunda tarea
-    task3 = app.send_task('generation.consolidar_archivos', args=[task2.get()])  # Tercera tarea
+    task3 = app.send_task('generation.consolidar_datos', args=[task2.get()])  # Tercera tarea
 
     # Esperar el resultado de la última tarea
     print(f"Resultado de la tarea final: {task3.get()}")

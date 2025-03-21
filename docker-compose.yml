@@ -48,6 +48,7 @@ services:
       - customers_api
       - transactions_api
       - spanner_emulator  # Asegúrate de que Celery espere al emulador
+      - localstack
     environment:
       - REDIS_HOST=redis
       - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el nombre del contenedor
@@ -62,6 +63,21 @@ services:
       context: .
       dockerfile: Dockerfile 
 
+  
+  localstack:
+    container_name: "${LOCALSTACK_DOCKER_NAME:-localstack-main}"
+    image: localstack/localstack
+    ports:
+      - "127.0.0.1:4566:4566"  # Puerto principal de LocalStack
+    environment:
+      - DEBUG=1
+      - SERVICES=s3  # Habilitar el servicio S3
+    volumes:
+      - ./init-scripts:/etc/localstack/init/ready.d  # Montar la carpeta con scripts de inicialización
+      - ${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack  # Volumen para persistencia de datos
+      - /var/run/docker.sock:/var/run/docker.sock  # Montar el socket de Docker
+    networks:
+      - celery_network
   test_container:
     build:
       context: .

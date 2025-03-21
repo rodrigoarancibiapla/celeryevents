@@ -3,7 +3,7 @@ export REDIS_HOST=localhost
 export SPANNER_EMULATOR_HOST=172.21.0.2:9010
 export URL_API_CUSTOMERS=http://localhost:8001
 export URL_API_TRANSACTIONS=http://localhost:8002
-
+export  LOCALSTACK_HOST=localhost
 echo "SPANNER_EMULATOR_HOST="$SPANNER_EMULATOR_HOST
 
 gcloud spanner databases ddl update test-db --instance=test-instance --ddl="
