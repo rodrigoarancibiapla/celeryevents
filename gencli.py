@@ -9,10 +9,10 @@ backend = f'redis://{redis_host}:6379/0'
 app = Celery('tasks', broker=broker, backend=backend)
 
 def ejecutar_flujo():
-    # Usando send_task para encadenar las tareas por su nombre
+    # Usando send_task para encadenar las tareas por su name
     # Pasando los argumentos entre las tareas utilizando apply_async y link
-    task1 = app.send_task('generation.generar_clientes')  # Primera tarea
-    task2 = app.send_task('generation.generar_transacciones', args=[task1.get()])  # Segunda tarea
+    task1 = app.send_task('generation.generar_Customers')  # Primera tarea
+    task2 = app.send_task('generation.generar_transactions', args=[task1.get()])  # Segunda tarea
     task3 = app.send_task('generation.consolidar_datos', args=[task2.get()])  # Tercera tarea
 
     # Esperar el resultado de la última tarea

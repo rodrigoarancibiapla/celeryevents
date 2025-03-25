@@ -21,12 +21,12 @@ session = Session()
 metadata = MetaData()
 
 # Definir tabla
-transacciones_table = Table('transacciones', metadata,
+transactions_table = Table('Transactions', metadata,
                       autoload_with=engine)
 
-@app.get("/transacciones")
-def obtener_transacciones():
+@app.get("/transactions")
+def obtener_transactions():
     with session.begin():
-        result = session.execute(transacciones_table.select())
-        transacciones = [{"transaccion_id": row[0], "cliente_id": row[1], "monto": row[2], "fecha": row[3]} for row in result]
-    return transacciones
+        result = session.execute(transactions_table.select())
+        transactions = [{"transaction_id": row[0], "Customer_id": row[1], "amount": row[2], "date": row[3]} for row in result]
+    return transactions

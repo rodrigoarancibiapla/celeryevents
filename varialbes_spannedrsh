@@ -7,18 +7,18 @@ export  LOCALSTACK_HOST=localhost
 echo "SPANNER_EMULATOR_HOST="$SPANNER_EMULATOR_HOST
 
 gcloud spanner databases ddl update test-db --instance=test-instance --ddl="
-CREATE TABLE clientes (
-    cliente_id INT64 NOT NULL,
-    nombre STRING(100),
+CREATE TABLE Customers (
+    Customer_id INT64 NOT NULL,
+    name STRING(100),
     email STRING(100)
-) PRIMARY KEY(cliente_id);
+) PRIMARY KEY(Customer_id);
 "
 
 gcloud spanner databases ddl update test-db --instance=test-instance --ddl="
-CREATE TABLE transacciones (
-    transaccion_id INT64 NOT NULL,
-    cliente_id INT64 NOT NULL,
-    monto FLOAT64 NOT NULL,
-    fecha DATE NOT NULL
-) PRIMARY KEY (transaccion_id)"
+CREATE TABLE transactions (
+    transaction_id INT64 NOT NULL,
+    Customer_id INT64 NOT NULL,
+    amount FLOAT64 NOT NULL,
+    date DATE NOT NULL
+) PRIMARY KEY (transaction_id)"
 

@@ -45,15 +45,14 @@ services:
     container_name: celery_worker
     depends_on:
       - redis
-      - customers_api
-      - transactions_api
-      - spanner_emulator  # Asegúrate de que Celery espere al emulador
+      - spanner_init
       - localstack
     environment:
       - REDIS_HOST=redis
-      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el nombre del contenedor
+      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el name del contenedor
       - URL_API_CUSTOMERS=http://customers_api:8001
       - URL_API_TRANSACTIONS=http://transactions_api:8002
+      - LOCALSTACK_HOST=localhost
     command: celery -A generation worker --loglevel=info
     volumes:
       - .:/app
@@ -78,15 +77,15 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock  # Montar el socket de Docker
     networks:
       - celery_network
-  test_container:
-    build:
-      context: .
-      dockerfile: Dockerfile.tester  # Usa un Dockerfile personalizado
-    command: /bin/sh
-    stdin_open: true  # Permite que el contenedor acepte la entrada del terminal
-    tty: true  # Mantiene el contenedor activo
-    networks:
-      - celery_network
+  # test_container:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.tester  # Usa un Dockerfile personalizado
+  #   command: /bin/sh
+  #   stdin_open: true  # Permite que el contenedor acepte la entrada del terminal
+  #   tty: true  # Mantiene el contenedor activo
+  #   networks:
+  #     - celery_network
   customers_api:
     build:
       context: ./customersAPI
@@ -95,7 +94,7 @@ services:
     ports:
       - "8001:8001"
     environment:
-      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el nombre del contenedor
+      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el name del contenedor
     networks:
       - celery_network
     depends_on:
@@ -111,7 +110,7 @@ services:
     ports:
       - "8002:8002"
     environment:
-      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el nombre del contenedor
+      - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el name del contenedor
     networks:
       - celery_network
     depends_on:
