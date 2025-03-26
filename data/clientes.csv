@@ -1,4 +1,4 @@
-Customer_id,name,email
+customer_id,name,email
 2,'Customer 2','Customer2@example.com'
 4,'Customer 4','Customer4@example.com'
 6,'Customer 6','Customer6@example.com'

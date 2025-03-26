@@ -38,14 +38,14 @@ def generar_Customers():
     
     # Crear el archivo CSV en memoria
     csv_buffer = []
-    csv_buffer.append(["Customer_id", "name", "email"])
+    csv_buffer.append(["customer_id", "name", "email"])
     
     # Obtener datos de la API
     response = requests.get(url_api_customers + "/Customers")
     result_Customers = response.json()
     
     for row in result_Customers:
-        csv_buffer.append([row["Customer_id"], row["name"], row["email"]])
+        csv_buffer.append([row["customer_id"], row["name"], row["email"]])
     
     # Convertir la lista a un archivo CSV en memoria
     csv_data = "\n".join([",".join(map(str, row)) for row in csv_buffer])
@@ -75,14 +75,14 @@ def generar_transactions(Customers_file):
     
     # Crear el archivo CSV en memoria
     csv_buffer = []
-    csv_buffer.append(["transaction_id", "Customer_id", "amount", "date"])
+    csv_buffer.append(["transaction_id", "customer_id", "amount", "date"])
     
     # Obtener datos de la API
     response = requests.get(url_api_transactions + "/transactions")
     result_transactions = response.json()
     
     for row in result_transactions:
-        csv_buffer.append([row["transaction_id"], row["Customer_id"], row["amount"], row["date"]])
+        csv_buffer.append([row["transaction_id"], row["customer_id"], row["amount"], row["date"]])
     
     # Convertir la lista a un archivo CSV en memoria
     csv_data = "\n".join([",".join(map(str, row)) for row in csv_buffer])
@@ -126,7 +126,7 @@ def consolidar_datos(data):
         return None
 
     # 3. Consolidar los datos
-    df_consolidado = df_transactions.merge(df_Customers, on="Customer_id", how="left")
+    df_consolidado = df_transactions.merge(df_Customers, on="customer_id", how="left")
 
     # 4. Guardar el archivo consolidado en S3
     consolidacion_file = "consolidacion.csv"

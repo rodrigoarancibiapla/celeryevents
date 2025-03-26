@@ -8,16 +8,16 @@ echo "SPANNER_EMULATOR_HOST="$SPANNER_EMULATOR_HOST
 
 gcloud spanner databases ddl update test-db --instance=test-instance --ddl="
 CREATE TABLE Customers (
-    Customer_id INT64 NOT NULL,
+    customer_id INT64 NOT NULL,
     name STRING(100),
     email STRING(100)
-) PRIMARY KEY(Customer_id);
+) PRIMARY KEY(customer_id);
 "
 
 gcloud spanner databases ddl update test-db --instance=test-instance --ddl="
 CREATE TABLE transactions (
     transaction_id INT64 NOT NULL,
-    Customer_id INT64 NOT NULL,
+    customer_id INT64 NOT NULL,
     amount FLOAT64 NOT NULL,
     date DATE NOT NULL
 ) PRIMARY KEY (transaction_id)"

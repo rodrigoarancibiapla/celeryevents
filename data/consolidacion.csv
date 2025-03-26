@@ -1,4 +1,4 @@
-transaction_id,Customer_id,amount,date,name,email
+transaction_id,customer_id,amount,date,name,email
 2,3,953.0,2021-12-28,'Customer 3','Customer3@example.com'
 4,5,40.0,2022-10-18,'Customer 5','Customer5@example.com'
 6,7,751.0,2023-09-21,'Customer 7','Customer7@example.com'

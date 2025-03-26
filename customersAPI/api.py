@@ -21,11 +21,11 @@ session = Session()
 metadata = MetaData()
 
 # Definir tabla
-Customers_table = Table('Customers', metadata, autoload_with=engine)
+Customers_table = Table('customers', metadata, autoload_with=engine)
 
 @app.get("/Customers")
 def obtener_Customers():
     with session.begin():
         result = session.execute(Customers_table.select())
-        Customers = [{"Customer_id": row[0], "name": row[1], "email": row[2]} for row in result]
+        Customers = [{"customer_id": row[0], "name": row[1], "email": row[2]} for row in result]
     return Customers

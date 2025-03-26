@@ -1,18 +1,26 @@
 FROM python:3.12-slim
 
+# Instala solo el componente gcloud necesario
+RUN apt-get update && apt-get install -y \
+    curl \
+    && curl -sSL https://sdk.cloud.google.com > /tmp/install.sh \
+    && bash /tmp/install.sh --disable-prompts --install-dir=/usr/local \
+    && apt-get remove -y curl \
+    && apt-get autoremove -y \
+    && rm -rf /var/lib/apt/lists/* /tmp/install.sh
+
+ENV PATH $PATH:/usr/local/google-cloud-sdk/bin
+
 WORKDIR /app
 
-# Copia el archivo requirements.txt dentro del contenedor
-COPY requirements.txt /app/requirements.txt
+COPY wait_for_spanner.sh /usr/bin/wait_for_spanner
+RUN chmod +x /usr/bin/wait_for_spanner
 
-# Instala las dependencias
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copia todo el código de la API al contenedor
-COPY . /app/customersAPI
+COPY . .
 
-# Define el puerto que va a usar la API
-EXPOSE 8002
+EXPOSE 8001
 
-# Comando para iniciar la API con uvicorn
-CMD ["uvicorn", "transactionsAPI.api:app", "--host", "0.0.0.0", "--port", "8002"]
+CMD ["wait_for_spanner", "uvicorn", "transactionsAPI.api:app", "--host", "0.0.0.0", "--port", "8002"]

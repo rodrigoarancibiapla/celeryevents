@@ -34,7 +34,7 @@ echo "Creando las tablas..."
 gcloud spanner databases ddl update test-db \
   --instance=test-instance \
   --ddl="
-CREATE TABLE Customers (
+CREATE TABLE customers (
   customer_id INT64 NOT NULL,
   name STRING(100),
   email STRING(100)
@@ -44,7 +44,7 @@ CREATE TABLE Customers (
 gcloud spanner databases ddl update test-db \
   --instance=test-instance \
   --ddl="
-CREATE TABLE Transactions (
+CREATE TABLE transactions (
   transaction_id INT64 NOT NULL,
   customer_id INT64 NOT NULL,
   amount FLOAT64 NOT NULL,
@@ -59,7 +59,7 @@ for i in {1..10}; do
   name="Customer $i"
   email="customer$i@example.com"
 
-  gcloud spanner rows insert --database=test-db --instance=test-instance --table=Customers \
+  gcloud spanner rows insert --database=test-db --instance=test-instance --table=customers \
     --data="customer_id=$customer_id,name='$name',email='$email'"
 done
 
@@ -77,7 +77,7 @@ for i in {1..30}; do
   day=$(( (RANDOM % 28) + 1 ))     # Día entre 1 y 28 (para evitar problemas con meses de 30/31 días)
   date=$(printf "%04d-%02d-%02d" $year $month $day)  # Formatear como YYYY-MM-DD
 
-  gcloud spanner rows insert --database=test-db --instance=test-instance --table=Transactions \
+  gcloud spanner rows insert --database=test-db --instance=test-instance --table=transactions \
     --data="transaction_id=$transaction_id,customer_id=$customer_id,amount=$amount,date=$date"
 done
 

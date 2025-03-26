@@ -52,7 +52,7 @@ services:
       - SPANNER_EMULATOR_HOST=spanner_emulator:9010  # Usamos el name del contenedor
       - URL_API_CUSTOMERS=http://customers_api:8001
       - URL_API_TRANSACTIONS=http://transactions_api:8002
-      - LOCALSTACK_HOST=localhost
+      - LOCALSTACK_HOST=localstack
     command: celery -A generation worker --loglevel=info
     volumes:
       - .:/app
