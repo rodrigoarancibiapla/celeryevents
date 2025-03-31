@@ -5,7 +5,6 @@ RUN apt-get update && apt-get install -y \
     curl \
     && curl -sSL https://sdk.cloud.google.com > /tmp/install.sh \
     && bash /tmp/install.sh --disable-prompts --install-dir=/usr/local \
-    && apt-get remove -y curl \
     && apt-get autoremove -y \
     && rm -rf /var/lib/apt/lists/* /tmp/install.sh
 

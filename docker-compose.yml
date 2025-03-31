@@ -25,7 +25,7 @@ services:
 
   spanner_init:
     build:
-      context: .
+      context: ./initSpanner
       dockerfile: Dockerfile.spanner  # Usa un Dockerfile personalizado
     container_name: spanner_init
     depends_on:
@@ -34,10 +34,7 @@ services:
       - SPANNER_EMULATOR_HOST=spanner_emulator:9010
     networks:
       - celery_network
-    volumes:
-      - .:/app  # Monta el directorio actual para acceder al script
-
-
+  
 
 
   celery_worker:
@@ -53,14 +50,14 @@ services:
       - URL_API_CUSTOMERS=http://customers_api:8001
       - URL_API_TRANSACTIONS=http://transactions_api:8002
       - LOCALSTACK_HOST=localstack
-    command: celery -A generation worker --loglevel=info
+    command: celery -A worker.generation worker --loglevel=info
     volumes:
       - .:/app
     networks:
       - celery_network
     build:
-      context: .
-      dockerfile: Dockerfile 
+      context: ./worker
+      dockerfile: Dockerfile.celery
 
   
   localstack:
@@ -77,15 +74,23 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock  # Montar el socket de Docker
     networks:
       - celery_network
-  # test_container:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile.tester  # Usa un Dockerfile personalizado
-  #   command: /bin/sh
-  #   stdin_open: true  # Permite que el contenedor acepte la entrada del terminal
-  #   tty: true  # Mantiene el contenedor activo
-  #   networks:
-  #     - celery_network
+
+  runflow:
+    build:
+      context: ./runflow  # Busca el Dockerfile en el directorio actual
+      dockerfile: Dockerfile.flow  # Nombre del Dockerfile
+    container_name: runflow
+    depends_on:
+      customers_api:
+        condition: service_healthy
+      transactions_api:
+        condition: service_healthy
+    networks:
+      - celery_network  # Asegúrate de que esta red exista o créala
+    environment:
+      - REDIS_HOST=redis
+    restart: on-failure
+    entrypoint: /wait-for-services.sh
   customers_api:
     build:
       context: ./customersAPI
@@ -101,6 +106,12 @@ services:
       - spanner_init 
     volumes:
       - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
+      interval: 10s
+      timeout: 60s
+      retries: 1
+      start_period: 20s  # Tiempo de gracia para que la API inicie
 
   transactions_api:
     build:
@@ -117,6 +128,12 @@ services:
       - spanner_init 
     volumes:
       - .:/app
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/health"]
+      interval: 10s
+      timeout: 60s
+      retries: 1
+      start_period: 20s  # Tiempo de gracia para que la API inicie
 
 
 networks:

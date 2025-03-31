@@ -1,0 +1,8 @@
+# Paquete principal para Spanner
+google-cloud-spanner==3.34.0
+
+# Dependencias comunes adicionales
+google-api-core==2.11.1
+google-auth==2.22.0
+proto-plus==1.22.3
+setuptools==76.0.0

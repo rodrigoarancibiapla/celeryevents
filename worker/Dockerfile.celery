@@ -9,6 +9,8 @@ COPY requirements.txt .
 # Instala las dependencias necesarias
 RUN pip install --no-cache-dir -r requirements.txt
 
+COPY . .
+
 # Asegúrate de tener Celery en el requirements.txt
 # En tu requirements.txt debe incluir:
 # celery==X.X.X
