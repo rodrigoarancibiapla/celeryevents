@@ -1,7 +1,5 @@
 
 google-cloud-spanner==3.34.0
-
-
 google-api-core==2.11.1
 google-auth==2.22.0
 proto-plus==1.22.3

@@ -5,9 +5,9 @@ from sqlalchemy.orm import sessionmaker
 
 app = FastAPI()
 
-project_id = 'my-project' 
-instance_id = 'test-instance'  
-database_id = 'test-db'   
+project_id = 'my-project'
+instance_id = 'test-instance'
+database_id = 'test-db'
 
 
 db_url = f"spanner+spanner://spanner_emulator:9010/projects/{project_id}/instances/{instance_id}/databases/{database_id}"
@@ -20,7 +20,8 @@ metadata = MetaData()
 
 
 transactions_table = Table('transactions', metadata,
-                      autoload_with=engine)
+                           autoload_with=engine)
+
 
 @app.get("/transactions")
 def obtener_transactions():
@@ -33,15 +34,14 @@ def obtener_transactions():
 @app.get("/health")
 async def health_check():
     try:
-      
+
         engine = create_engine(db_url)
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        
-   
+
         metadata = MetaData()
         Table('customers', metadata, autoload_with=engine)
-        
+
         return JSONResponse(
             status_code=200,
             content={"status": "healthy", "database": "connected", "table": "accessible"}

@@ -4,9 +4,9 @@ from sqlalchemy.orm import sessionmaker
 from fastapi.responses import JSONResponse
 app = FastAPI()
 
-project_id = 'my-project'  
-instance_id = 'test-instance'  
-database_id = 'test-db'       
+project_id = 'my-project'
+instance_id = 'test-instance'
+database_id = 'test-db'
 
 
 db_url = f"spanner+spanner://spanner_emulator:9010/projects/{project_id}/instances/{instance_id}/databases/{database_id}"
@@ -20,6 +20,7 @@ metadata = MetaData()
 
 Customers_table = Table('customers', metadata, autoload_with=engine)
 
+
 @app.get("/Customers")
 def obtener_Customers():
     with session.begin():
@@ -27,14 +28,15 @@ def obtener_Customers():
         Customers = [{"customer_id": row[0], "name": row[1], "email": row[2]} for row in result]
     return Customers
 
+
 @app.get("/health")
 async def health_check():
     try:
-       
+
         engine = create_engine(db_url)
         with engine.connect() as conn:
             conn.execute(text("SELECT 1"))
-        
+
         metadata = MetaData()
         Table('customers', metadata, autoload_with=engine)
         return JSONResponse(
